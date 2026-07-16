@@ -51,7 +51,7 @@ not contain one — it reads the key at runtime, so it's safe to make this repo 
 2. Sign in with your GitHub account
 3. Click **New app**
 4. Select:
-   - Repository: `your-username/hr-policy-rag-bot`
+   - Repository: `https://github.com/manasanalla2206/Hr-policy-rag-bot/`
    - Branch: `main`
    - Main file path: `app.py`
 5. Click **Deploy**
@@ -152,4 +152,4 @@ understand the system, not just that it "works."
 - Groq free API keys: https://console.groq.com
 - Streamlit Cloud deployment: https://share.streamlit.io
 - Your live app: https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/)
-- Your GitHub repo: *(fill in after upload)*
+- Your GitHub repo: https://github.com/manasanalla2206/Hr-policy-rag-bot

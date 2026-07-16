@@ -1,3 +1,7 @@
+
+
+Uploading HR Policy Assistant (RAG) · Streamlit - Google Chrome 2026-07-16 10-12-04.mp4…
+
 # HR Policy Assistant — RAG Chatbot
 
 A Retrieval-Augmented Generation (RAG) chatbot that answers questions about an uploaded

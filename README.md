@@ -51,12 +51,12 @@ not contain one — it reads the key at runtime, so it's safe to make this repo 
 2. Sign in with your GitHub account
 3. Click **New app**
 4. Select:
-   - Repository: `https://github.com/manasanalla2206/Hr-policy-rag-bot/`
+   - Repository: `manasanalla2206/Hr-policy-rag-bot`
    - Branch: `main`
    - Main file path: `app.py`
 5. Click **Deploy**
 6. Wait 2–4 minutes while it installs dependencies (`requirements.txt`)
-7. You'll get a live public URL, e.g. `https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/`
+7. You'll get a live public URL — yours is: [hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app](https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/)
 
 ---
 
@@ -87,8 +87,19 @@ fall back to asking for the key in the sidebar manually — both paths work.
 3. In the sidebar, upload `sample_hr_policy.txt` (or `.pdf` / `.docx`)
 4. Click **Process Document(s)** — wait for the success message showing chunk count
 5. In the chat box at the bottom, ask a test question (see table below)
-6. Confirm the answer is accurate, then click **"Retrieval + eval details"** under the
-   answer to see the retrieved chunks, similarity scores, and latency
+6. Confirm the direct answer appears immediately below the chat
+7. Two expanders appear under each answer — check both:
+   - **📊 Evals** — retrieval latency, generation latency, total response time, answer
+     length, and the context overlap (grounding) check
+   - **🔍 Complete Process** — the full transparent pipeline for that specific question:
+     1. Chunking config used (chunk size, overlap)
+     2. Your question converted into an embedding (model name, dimension, actual vector values)
+     3. The exact chunks retrieved from FAISS, with similarity distance scores
+     4. The final prompt sent to the LLM (context + question combined)
+     5. Which model generated the answer
+
+This "Complete Process" view is useful to open live in an interview if asked to explain
+how the system works end to end — it's a real, working trace, not a diagram.
 
 ### Expected test questions and answers
 
@@ -149,7 +160,7 @@ understand the system, not just that it "works."
 ---
 
 ## Quick Reference Links
-- Groq free API keys: https://console.groq.com
-- Streamlit Cloud deployment: https://share.streamlit.io
-- Your live app: https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/)
-- Your GitHub repo: https://github.com/manasanalla2206/Hr-policy-rag-bot
+- Groq free API keys: [console.groq.com](https://console.groq.com)
+- Streamlit Cloud deployment: [share.streamlit.io](https://share.streamlit.io)
+- GitHub repo: [github.com/manasanalla2206/Hr-policy-rag-bot](https://github.com/manasanalla2206/Hr-policy-rag-bot)
+- Live app: [hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app](https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/)

@@ -56,7 +56,7 @@ not contain one — it reads the key at runtime, so it's safe to make this repo 
    - Main file path: `app.py`
 5. Click **Deploy**
 6. Wait 2–4 minutes while it installs dependencies (`requirements.txt`)
-7. You'll get a live public URL, e.g. `[[[https://your-app-name.streamlit.app](https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/)](https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/)]
+7. You'll get a live public URL, e.g. `https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/`
 
 ---
 

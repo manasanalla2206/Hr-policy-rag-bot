@@ -151,5 +151,5 @@ understand the system, not just that it "works."
 ## Quick Reference Links
 - Groq free API keys: https://console.groq.com
 - Streamlit Cloud deployment: https://share.streamlit.io
-- Your live app: *(fill in after deployment)*
+- Your live app: https://hr-policy-rag-bot-g3puo3taacmctka2ptgkow.streamlit.app/)
 - Your GitHub repo: *(fill in after upload)*

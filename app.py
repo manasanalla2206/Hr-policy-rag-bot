@@ -101,10 +101,12 @@ if process_btn:
                     st.sidebar.warning(f"No text extracted from {f.name}")
 
             if full_text.strip():
-                splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=50)
+                chunk_size, chunk_overlap = 300, 50
+                splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
                 chunks = splitter.create_documents([full_text])
 
                 embedding_model = get_embedding_model()
+                sample_vector = embedding_model.embed_query(chunks[0].page_content)
                 vector_db = FAISS.from_documents(chunks, embedding_model)
 
                 st.session_state.vector_db = vector_db
@@ -113,6 +115,11 @@ if process_btn:
                     "files": file_info,
                     "num_chunks": len(chunks),
                     "sample_chunks": [c.page_content for c in chunks[:3]],
+                    "chunk_size": chunk_size,
+                    "chunk_overlap": chunk_overlap,
+                    "embedding_model": "sentence-transformers/all-MiniLM-L6-v2",
+                    "embedding_dim": len(sample_vector),
+                    "sample_vector": sample_vector[:10],
                 }
                 st.sidebar.success(f"Processed {len(uploaded_files)} file(s) into {len(chunks)} chunks.")
             else:
@@ -139,14 +146,30 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
         if msg["role"] == "assistant" and "details" in msg:
-            with st.expander("Retrieval + eval details"):
-                st.write(f"**Retrieval latency:** {msg['details']['retrieval_time']:.3f} sec")
-                st.write(f"**Generation latency:** {msg['details']['gen_time']:.2f} sec")
-                st.write(f"**Context overlap (grounding check):** {msg['details']['overlap']:.1%}")
-                st.write("**Retrieved chunks:**")
-                for i, (chunk, score) in enumerate(msg["details"]["chunks"]):
-                    st.write(f"Chunk {i+1} (distance: {score:.4f})")
-                    st.code(chunk, language=None)
+            d = msg["details"]
+            col1, col2 = st.columns(2)
+            with col1:
+                with st.expander("📊 Evals"):
+                    st.write(f"**Retrieval latency:** {d['retrieval_time']:.3f} sec")
+                    st.write(f"**Generation latency:** {d['gen_time']:.2f} sec")
+                    st.write(f"**Total response time:** {d['retrieval_time'] + d['gen_time']:.2f} sec")
+                    st.write(f"**Answer length:** {len(msg['content'].split())} words")
+                    st.write(f"**Context overlap (grounding check):** {d['overlap']:.1%}")
+                    st.caption("Grounding check = % of answer words also found in retrieved context. Higher = more traceable to source, lower = more the model 'added' on its own.")
+            with col2:
+                with st.expander("🔍 Complete Process (chunking → embedding → retrieval → LLM)"):
+                    st.write("**1. Chunking config used:**")
+                    st.write(f"- Chunk size: {d['chunk_size']} chars, overlap: {d['chunk_overlap']} chars")
+                    st.write("**2. Query converted to embedding:**")
+                    st.write(f"- Model: {d['embedding_model']}, dimension: {d['embedding_dim']}")
+                    st.code(f"{np.round(d['query_vector'][:10], 4)} ... ({d['embedding_dim']} total values)", language=None)
+                    st.write("**3. Chunks retrieved from FAISS by similarity:**")
+                    for i, (chunk, score) in enumerate(d["chunks"]):
+                        st.write(f"Chunk {i+1} — similarity distance: `{score:.4f}` (lower = closer match)")
+                        st.code(chunk, language=None)
+                    st.write("**4. Final prompt sent to LLM:**")
+                    st.code(d["prompt"], language=None)
+                    st.write("**5. Model used for generation:** `llama-3.1-8b-instant` (via Groq)")
 
 # Chat input
 question = st.chat_input("Ask a question about the uploaded document...")
@@ -161,6 +184,9 @@ if question:
 
         with st.chat_message("assistant"):
             with st.spinner("Retrieving and generating answer..."):
+                embedding_model = get_embedding_model()
+                query_vector = embedding_model.embed_query(question)
+
                 t0 = time.time()
                 results = st.session_state.vector_db.similarity_search_with_score(question, k=3)
                 retrieval_time = time.time() - t0
@@ -191,15 +217,36 @@ Answer:"""
                     "gen_time": gen_time,
                     "overlap": overlap,
                     "chunks": [(doc.page_content, score) for doc, score in results],
+                    "chunk_size": st.session_state.doc_summary["chunk_size"],
+                    "chunk_overlap": st.session_state.doc_summary["chunk_overlap"],
+                    "embedding_model": st.session_state.doc_summary["embedding_model"],
+                    "embedding_dim": st.session_state.doc_summary["embedding_dim"],
+                    "query_vector": query_vector,
+                    "prompt": prompt,
                 }
 
-                with st.expander("Retrieval + eval details"):
-                    st.write(f"**Retrieval latency:** {retrieval_time:.3f} sec")
-                    st.write(f"**Generation latency:** {gen_time:.2f} sec")
-                    st.write(f"**Context overlap (grounding check):** {overlap:.1%}")
-                    st.write("**Retrieved chunks:**")
-                    for i, (chunk, score) in enumerate(details["chunks"]):
-                        st.write(f"Chunk {i+1} (distance: {score:.4f})")
-                        st.code(chunk, language=None)
+                col1, col2 = st.columns(2)
+                with col1:
+                    with st.expander("📊 Evals"):
+                        st.write(f"**Retrieval latency:** {retrieval_time:.3f} sec")
+                        st.write(f"**Generation latency:** {gen_time:.2f} sec")
+                        st.write(f"**Total response time:** {retrieval_time + gen_time:.2f} sec")
+                        st.write(f"**Answer length:** {len(answer.split())} words")
+                        st.write(f"**Context overlap (grounding check):** {overlap:.1%}")
+                        st.caption("Grounding check = % of answer words also found in retrieved context.")
+                with col2:
+                    with st.expander("🔍 Complete Process (chunking → embedding → retrieval → LLM)"):
+                        st.write("**1. Chunking config used:**")
+                        st.write(f"- Chunk size: {details['chunk_size']} chars, overlap: {details['chunk_overlap']} chars")
+                        st.write("**2. Query converted to embedding:**")
+                        st.write(f"- Model: {details['embedding_model']}, dimension: {details['embedding_dim']}")
+                        st.code(f"{np.round(query_vector[:10], 4)} ... ({details['embedding_dim']} total values)", language=None)
+                        st.write("**3. Chunks retrieved from FAISS by similarity:**")
+                        for i, (chunk, score) in enumerate(details["chunks"]):
+                            st.write(f"Chunk {i+1} — similarity distance: `{score:.4f}` (lower = closer match)")
+                            st.code(chunk, language=None)
+                        st.write("**4. Final prompt sent to LLM:**")
+                        st.code(prompt, language=None)
+                        st.write("**5. Model used for generation:** `llama-3.1-8b-instant` (via Groq)")
 
         st.session_state.messages.append({"role": "assistant", "content": answer, "details": details})
